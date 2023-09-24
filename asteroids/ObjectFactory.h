@@ -12,5 +12,5 @@
 class ObjectFactory
 {
 public:
-	std::shared_ptr<GameObject> createObject(GlobalConfig::OBJECTS objectType, sf::Vector2f origin, sf::Vector2f orientation = { 0.f, 0.f });
+	std::unique_ptr<GameObject> createObject(GlobalConfig::OBJECTS objectType, sf::Vector2f origin, sf::Vector2f orientation = { 0.f, 0.f });
 };

@@ -1,10 +1,10 @@
 #include "ObjectFactory.h"
 
-std::shared_ptr<GameObject> ObjectFactory::createObject(GlobalConfig::OBJECTS objectType, sf::Vector2f origin, sf::Vector2f orientation)
+std::unique_ptr<GameObject> ObjectFactory::createObject(GlobalConfig::OBJECTS objectType, sf::Vector2f origin, sf::Vector2f orientation)
 {
 	if (objectType == GlobalConfig::OBJECTS::BOULDER)
 	{
-		std::unique_ptr<Boulder> object = std::make_unique<Boulder>(origin);
+		auto object = std::make_unique<Boulder>(origin);
 
 		object->m_type = GlobalConfig::OBJECTS::BOULDER;
 

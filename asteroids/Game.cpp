@@ -56,7 +56,7 @@ void Game::initialize()
             float randomDistance = rand() % 100 + 1;
             sf::Vector2f offset = randomDistance * normalize(rotateVectorByAngle({ 1.f, 0.f }, randomAngle));
 
-			boulders.push_back(std::dynamic_pointer_cast<Boulder>(objectSpawner.createObject(GlobalConfig::OBJECTS::BOULDER, origin + offset)));
+			boulders.push_back(std::move(objectSpawner.createObject(GlobalConfig::OBJECTS::BOULDER, origin + offset)));
         }
     }
 }
@@ -115,13 +115,13 @@ void Game::run()
 
         // update stuff
         GlobalConfig::update(dt);
-        for (int i = 0; i < boulders.size(); i++)
+        for (auto&& boulder : boulders)
         {
-            boulders[i]->update(dt);
+            boulder->update(dt);
         }
-        for (int i = 0; i < bullets.size(); i++)
+        for (auto&& bullet : bullets)
         {
-            bullets[i]->update(dt);
+            bullet->update(dt);
         }
         ship->update(dt);
         particles.update(dt);
@@ -129,6 +129,7 @@ void Game::run()
         // collisions
         //std::cout << "CollisionHelpers size: " << collisionHelpers.size() << "\n";
         collisionHelpers.clear();
+        std::vector<GameObject*> collisions;
 
         // ship and boulders
         for (int i = 0; i < boulders.size(); i++)
@@ -148,8 +149,8 @@ void Game::run()
 
             if (isPointInsideConvexPolygon({ 0.f, 0.f }, difference))
             {
-                collisions.push_back(ship);
-                collisions.push_back(boulders[i]);
+                collisions.push_back(ship.get());
+                collisions.push_back(boulders[i].get());
 
                 ship->collide();
                 boulders[i]->collide();
@@ -186,8 +187,8 @@ void Game::run()
 
 					if (isPointInsideConvexPolygon({ 0.f, 0.f }, difference))
 					{
-						collisions.push_back(boulders[i]);
-						collisions.push_back(boulders[j]);
+						collisions.push_back(boulders[i].get());
+						collisions.push_back(boulders[j].get());
 
 						boulders[i]->collide();
 						boulders[j]->collide();
@@ -229,8 +230,8 @@ void Game::run()
                 if (isPointInsideConvexPolygon({ 0.f, 0.f }, difference))
                 {
                     std::cout << "BANG BANG!\n";
-                    collisions.push_back(bullets[i]);
-                    collisions.push_back(boulders[j]);
+                    collisions.push_back(bullets[i].get());
+                    collisions.push_back(boulders[j].get());
 
                     bullets[i]->collide();
                     boulders[j]->collide();

@@ -24,10 +24,9 @@ public:
     sf::RenderWindow* window;
 
     std::shared_ptr<PlayerShip> ship;
-    std::vector<std::shared_ptr<GameObject>> boulders;
+    std::vector<std::unique_ptr<GameObject>> boulders;
     std::vector<std::shared_ptr<GameObject>> bullets;
 
-    std::vector<std::shared_ptr<GameObject>> collisions;
     std::vector<sf::VertexArray> collisionHelpers;
 
     ObjectFactory objectSpawner;
