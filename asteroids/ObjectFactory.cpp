@@ -50,7 +50,24 @@ std::unique_ptr<GameObject> ObjectFactory::createObject(GlobalConfig::OBJECTS ob
 		//	object->m_colliderComponent.m_vertices.push_back(boulderVA);
 		//}
 
-		return std::move(object);
+		// collision optimization
+
+		float minx = polygon[0].x;
+		float maxx = polygon[0].x;
+		float miny = polygon[0].y;
+		float maxy = polygon[0].y;
+
+		for (int i = 1; i < polygon.size(); i++)
+		{
+			minx = std::min(minx, polygon[i].x);
+			maxx = std::max(maxx, polygon[i].x);
+			miny = std::min(miny, polygon[i].y);
+			maxy = std::max(maxy, polygon[i].y);
+		}
+
+		object->m_radius = distanceBetweenPoints({ minx, miny }, { maxx, maxy });
+
+		return object;
 	}
 
 	if (objectType == GlobalConfig::OBJECTS::ROCK)
@@ -101,7 +118,22 @@ std::unique_ptr<GameObject> ObjectFactory::createObject(GlobalConfig::OBJECTS ob
 		//	object->m_colliderComponent.m_vertices.push_back(boulderVA);
 		//}
 
-		return std::move(object);
+		float minx = polygon[0].x;
+		float maxx = polygon[0].x;
+		float miny = polygon[0].y;
+		float maxy = polygon[0].y;
+
+		for (int i = 1; i < polygon.size(); i++)
+		{
+			minx = std::min(minx, polygon[i].x);
+			maxx = std::max(maxx, polygon[i].x);
+			miny = std::min(miny, polygon[i].y);
+			maxy = std::max(maxy, polygon[i].y);
+		}
+
+		object->m_radius = distanceBetweenPoints({ minx, miny }, { maxx, maxy });
+
+		return object;
 	}
 
 	if (objectType == GlobalConfig::OBJECTS::BULLET)
@@ -129,6 +161,21 @@ std::unique_ptr<GameObject> ObjectFactory::createObject(GlobalConfig::OBJECTS ob
 		object->m_colliderComponent.m_polygons.push_back(triangle);
 		object->m_colliderComponent.rotate(computeAngleBetweenVectorAndOXAxis(object->m_orientation));
 
-		return std::move(object);
+		float minx = triangle[0].x;
+		float maxx = triangle[0].x;
+		float miny = triangle[0].y;
+		float maxy = triangle[0].y;
+
+		for (int i = 1; i < triangle.size(); i++)
+		{
+			minx = std::min(minx, triangle[i].x);
+			maxx = std::max(maxx, triangle[i].x);
+			miny = std::min(miny, triangle[i].y);
+			maxy = std::max(maxy, triangle[i].y);
+		}
+
+		object->m_radius = distanceBetweenPoints({ minx, miny }, { maxx, maxy });
+
+		return object;
 	}
 }

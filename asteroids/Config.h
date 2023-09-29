@@ -17,7 +17,7 @@ class GlobalConfig
 	GlobalConfig();
 
 public:
-	static enum class OBJECTS
+	enum class OBJECTS
 	{
 		START = 0,
 		GENERIC = 0,
@@ -28,7 +28,7 @@ public:
 		END = 4,
 	};
 
-	static enum class PARTICLES
+	enum class PARTICLES
 	{
 		START = 0,
 		PIXEL = 0,

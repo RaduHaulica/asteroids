@@ -10,11 +10,44 @@ void Game::initialize()
     // initialize random seed
     std::srand(std::time(NULL));
 
+    defaultFont.loadFromFile("Roboto-Bold.ttf");
+
+    menuText.setFont(defaultFont);
+    menuText.setFillColor(sf::Color::Yellow);
+    menuText.setString("PRESS ENTER TO START\n\n\nArrow keys - steer ship\nSpace - shoot lasers\nPress ESC to restart\nHold ESC to quit");
+    menuText.setPosition(300.f, 500.f);
+
+    scoreText.setFont(defaultFont);
+    scoreText.setFillColor(sf::Color::White);
+    scoreText.setPosition(0.f, 0.f);
+    scoreText.setString("Score text string");
+
+    gameOverText.setFont(defaultFont);
+    gameOverText.setFillColor(sf::Color::Yellow);
+    gameOverText.setPosition(200.f, 500.f);
+    gameOverText.setString("CONGRATULATIONS!\nAll the rocks are dead, now you can rest\n\nPress ESC to restart\nShow those rocks who's boss again!");
+
+    std::fstream scoreFile;
+    scoreFile.open("score.txt", std::fstream::in);
+    std::string line;
+    std::getline(scoreFile, line);
+    std::cout << "Reading from file... " << line << "\n";
+    scoreFile.close();
+    previousScore = std::stof(line);
+
+    highScoreText.setFont(defaultFont);
+    highScoreText.setFillColor(sf::Color::White);
+    highScoreText.setPosition(700.f, 0.f);
+    highScoreText.setString("Low score: " + std::to_string(previousScore));
+
+
     if (window != nullptr)
     {
         delete window;
     }
 	window = new sf::RenderWindow(sf::VideoMode(1000, 1000), "Polygons!");
+
+    timePassed = 0.f;
 
     dt = 0.f;
     clock.restart();
@@ -23,6 +56,8 @@ void Game::initialize()
     lastMousePosition = { 0.f, 0.f };
 
     isQuitGameRequested = false;
+    isGameStarted = false;
+    isGameCompleted = false;
 
     fixedTimeUpdateInterval = 1.f / 60.f;
     fixedTimeUpdateAccumulator = 0.f;
@@ -89,6 +124,21 @@ void Game::draw()
 
     window->draw(*ship);
     
+    if (isGameStarted)
+    {
+        window->draw(scoreText);
+        window->draw(highScoreText);
+    }
+
+    if (!isGameStarted)
+    {
+        window->draw(menuText);
+    }
+    if (isGameCompleted)
+    {
+        window->draw(gameOverText);
+    }
+
     window->display();
 }
 
@@ -113,175 +163,207 @@ void Game::run()
             isQuitGameRequested = true;
         }
 
-        // update stuff
-        GlobalConfig::update(dt);
-        for (auto&& boulder : boulders)
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
         {
-            boulder->update(dt);
+            isGameStarted = true;
         }
-        for (auto&& bullet : bullets)
-        {
-            bullet->update(dt);
-        }
-        ship->update(dt);
-        particles.update(dt);
 
-        // collisions
-        //std::cout << "CollisionHelpers size: " << collisionHelpers.size() << "\n";
-        collisionHelpers.clear();
-        std::vector<GameObject*> collisions;
-
-        // ship and boulders
-        for (int i = 0; i < boulders.size(); i++)
+        if (isGameStarted)
         {
-            // create minkowski difference
-            std::vector<sf::Vector2f> difference;
-            std::vector<sf::Vector2f> polygon1 = computeConvexHull(boulders[i]->m_colliderComponent.m_polygons[0]);
-            for (int it1 = 0; it1 < polygon1.size(); it1++)
+            if (!isGameCompleted)
             {
-                std::vector<sf::Vector2f> polygon2 = computeConvexHull(ship->m_colliderComponent.m_polygons[0]);
-                for (int it2 = 0; it2 < polygon2.size(); it2++)
-                {
-                    difference.push_back(polygon1[it1] - polygon2[it2]);
-                }
+				timePassed += dt;
             }
-            difference = computeConvexHull(difference);
+            scoreText.setString("Score: " + std::to_string(timePassed));
 
-            if (isPointInsideConvexPolygon({ 0.f, 0.f }, difference))
+            // update stuff
+            GlobalConfig::update(dt);
+            for (auto&& boulder : boulders)
             {
-                collisions.push_back(ship.get());
-                collisions.push_back(boulders[i].get());
-
-                ship->collide();
-                boulders[i]->collide();
+                boulder->update(dt);
             }
-        }
-
-        // boulders
-
-        if (boulders.size() > 1)
-        {
-			for (int i = 0; i < (boulders.size() - 1); i++)
-			{
-
-				std::vector<sf::Vector2f> polygon1;
-				polygon1 = computeConvexHull(boulders[i]->m_colliderComponent.m_polygons[0]);
-
-				for (int j = i + 1; j < boulders.size(); j++)
-				{
-					// create minkowski difference
-					std::vector<sf::Vector2f> difference;
-
-					std::vector<sf::Vector2f> polygon2;
-					polygon2 = computeConvexHull(boulders[j]->m_colliderComponent.m_polygons[0]);
-
-					for (int it1 = 0; it1 < polygon1.size(); it1++)
-					{
-						for (int it2 = 0; it2 < polygon2.size(); it2++)
-						{
-							difference.push_back(polygon1[it1] - polygon2[it2]);
-						}
-					}
-
-					difference = computeConvexHull(difference);
-
-					if (isPointInsideConvexPolygon({ 0.f, 0.f }, difference))
-					{
-						collisions.push_back(boulders[i].get());
-						collisions.push_back(boulders[j].get());
-
-						boulders[i]->collide();
-						boulders[j]->collide();
-					}
-				}
-			}
-        }
-
-        // lasers and boulders
-        //std::cout << "Lasers: " << bullets.size() << "\n";
-        for (int i = 0; i < bullets.size(); i++)
-        {
-
-            std::vector<sf::Vector2f> polygon1;
-            polygon1 = computeConvexHull(bullets[i]->m_colliderComponent.m_polygons[0]);
-
-            for (int j = 0; j < boulders.size(); j++)
+            for (auto&& bullet : bullets)
             {
-				// create minkowski difference
-				std::vector<sf::Vector2f> difference;
+                bullet->update(dt);
+            }
+            ship->update(dt);
+            particles.update(dt);
 
-                std::vector<sf::Vector2f> polygon2;
-                polygon2 = computeConvexHull(boulders[j]->m_colliderComponent.m_polygons[0]);
+            // ==========
+            // collisions
+            // ==========
 
-                for (int it1 = 0; it1 < polygon1.size(); it1++)
+            //std::cout << "CollisionHelpers size: " << collisionHelpers.size() << "\n";
+            collisionHelpers.clear();
+            std::vector<GameObject*> collisions;
+
+            // ship and boulders
+            for (int i = 0; i < boulders.size(); i++)
+            {
+                // broad phase test
+                if (distanceBetweenPoints(ship->m_position, boulders[i]->m_position) < ship->m_radius + boulders[i]->m_radius)
                 {
-                    for (int it2 = 0; it2 < polygon2.size(); it2++)
+                    // if passed proceed with narrow phase test
+
+                    // create minkowski difference
+                    std::vector<sf::Vector2f> difference;
+                    std::vector<sf::Vector2f> polygon1 = computeConvexHull(boulders[i]->m_colliderComponent.m_polygons[0]);
+                    for (int it1 = 0; it1 < polygon1.size(); it1++)
                     {
-                        difference.push_back(polygon1[it1] - polygon2[it2]);
+                        std::vector<sf::Vector2f> polygon2 = computeConvexHull(ship->m_colliderComponent.m_polygons[0]);
+                        for (int it2 = 0; it2 < polygon2.size(); it2++)
+                        {
+                            difference.push_back(polygon1[it1] - polygon2[it2]);
+                        }
+                    }
+                    difference = computeConvexHull(difference);
+
+                    if (isPointInsideConvexPolygon({ 0.f, 0.f }, difference))
+                    {
+                        collisions.push_back(ship.get());
+                        collisions.push_back(boulders[i].get());
+
+                        ship->collide();
+                        boulders[i]->collide();
                     }
                 }
+            }
 
-                difference = computeConvexHull(difference);
+            // boulders
 
-                sf::VertexArray differenceVA = pointsToVertices(difference, sf::Color::Blue);
-                differenceVA.setPrimitiveType(sf::PrimitiveType::LineStrip);
-                collisionHelpers.push_back(differenceVA);
-
-                if (isPointInsideConvexPolygon({ 0.f, 0.f }, difference))
+            if (boulders.size() > 1)
+            {
+                for (int i = 0; i < (boulders.size() - 1); i++)
                 {
-                    std::cout << "BANG BANG!\n";
-                    collisions.push_back(bullets[i].get());
-                    collisions.push_back(boulders[j].get());
+                    std::vector<sf::Vector2f> polygon1;
+                    polygon1 = computeConvexHull(boulders[i]->m_colliderComponent.m_polygons[0]);
 
-                    bullets[i]->collide();
-                    boulders[j]->collide();
-
-                    MessageQueue::Message m;
-                    m.type = MessageQueue::MessageType::EXPLOSION;
-                    m.payload.position = boulders[j]->m_position;
-                    m.payload.direction = boulders[j]->m_orientation;
-                    MessageQueue::getInstance()->pushMessage(m);
-
-                    if (boulders[j]->m_type == GlobalConfig::OBJECTS::BOULDER)
+                    for (int j = i + 1; j < boulders.size(); j++)
                     {
-						m.type = MessageQueue::MessageType::MAKE_ROCK;
-						m.payload.position = boulders[j]->m_position + 25.f * boulders[j]->m_orientation;
-						m.payload.direction = rotateVector90Left(boulders[j]->m_orientation);
-						MessageQueue::getInstance()->pushMessage(m);
+                        // broad phase test
+                        if (distanceBetweenPoints(boulders[i]->m_position, boulders[j]->m_position) < boulders[i]->m_radius + boulders[j]->m_radius)
+                        {
+                            // if passed proceed with narrow phase test
 
-						m.payload.position = boulders[j]->m_position - 25.f * boulders[j]->m_orientation;
-						m.payload.direction = rotateVector90Right(boulders[j]->m_orientation);
-						MessageQueue::getInstance()->pushMessage(m);
+                            // create minkowski difference
+                            std::vector<sf::Vector2f> difference;
+
+                            std::vector<sf::Vector2f> polygon2;
+                            polygon2 = computeConvexHull(boulders[j]->m_colliderComponent.m_polygons[0]);
+
+                            for (int it1 = 0; it1 < polygon1.size(); it1++)
+                            {
+                                for (int it2 = 0; it2 < polygon2.size(); it2++)
+                                {
+                                    difference.push_back(polygon1[it1] - polygon2[it2]);
+                                }
+                            }
+
+                            difference = computeConvexHull(difference);
+
+                            if (isPointInsideConvexPolygon({ 0.f, 0.f }, difference))
+                            {
+                                collisions.push_back(boulders[i].get());
+                                collisions.push_back(boulders[j].get());
+
+                                boulders[i]->collide();
+                                boulders[j]->collide();
+                            }
+                        }
                     }
-
-                    if (boulders[j]->m_type == GlobalConfig::OBJECTS::ROCK)
-                    {
-                        m.type = MessageQueue::MessageType::MAKE_RUBBLE;
-                        m.payload.position = boulders[j]->m_position;
-                        m.payload.direction = boulders[j]->m_orientation;
-                        MessageQueue::getInstance()->pushMessage(m);
-                    }
-
-                    bullets[i]->m_markedForDeath = true;
-                    boulders[j]->m_markedForDeath = true;
                 }
             }
-        }
 
-        //std::cout << "Collisions: " << collisions.size() << "\n";
-        for (int i = 0; i < collisions.size(); i++)
-        {
-            collisions[i]->m_colliderComponent.m_color = sf::Color::Red;
-        }
-        collisions.clear();
-
-        // process messages
-        bool empty{ false };
-        while (!empty)
-        {
-            MessageQueue::Message currentMessage = MessageQueue::getInstance()->getMessage();
-            switch (currentMessage.type)
+            // lasers and boulders
+            //std::cout << "Lasers: " << bullets.size() << "\n";
+            for (int i = 0; i < bullets.size(); i++)
             {
+                std::vector<sf::Vector2f> polygon1;
+                polygon1 = computeConvexHull(bullets[i]->m_colliderComponent.m_polygons[0]);
+
+                for (int j = 0; j < boulders.size(); j++)
+                {
+                    // broad phase test
+                    if (distanceBetweenPoints(bullets[i]->m_position, boulders[j]->m_position) < bullets[i]->m_radius + boulders[j]->m_radius)
+                    {
+                        // if test passed proceed with narrow pahse
+
+                        // create minkowski difference
+                        std::vector<sf::Vector2f> difference;
+
+                        std::vector<sf::Vector2f> polygon2;
+                        polygon2 = computeConvexHull(boulders[j]->m_colliderComponent.m_polygons[0]);
+
+                        for (int it1 = 0; it1 < polygon1.size(); it1++)
+                        {
+                            for (int it2 = 0; it2 < polygon2.size(); it2++)
+                            {
+                                difference.push_back(polygon1[it1] - polygon2[it2]);
+                            }
+                        }
+
+                        difference = computeConvexHull(difference);
+
+                        sf::VertexArray differenceVA = pointsToVertices(difference, sf::Color::Blue);
+                        differenceVA.setPrimitiveType(sf::PrimitiveType::LineStrip);
+                        collisionHelpers.push_back(differenceVA);
+
+                        if (isPointInsideConvexPolygon({ 0.f, 0.f }, difference))
+                        {
+                            std::cout << "BANG BANG!\n";
+                            collisions.push_back(bullets[i].get());
+                            collisions.push_back(boulders[j].get());
+
+                            bullets[i]->collide();
+                            boulders[j]->collide();
+
+                            MessageQueue::Message m;
+                            m.type = MessageQueue::MessageType::EXPLOSION;
+                            m.payload.position = boulders[j]->m_position;
+                            m.payload.direction = boulders[j]->m_orientation;
+                            MessageQueue::getInstance()->pushMessage(m);
+
+                            if (boulders[j]->m_type == GlobalConfig::OBJECTS::BOULDER)
+                            {
+                                m.type = MessageQueue::MessageType::MAKE_ROCK;
+                                m.payload.position = boulders[j]->m_position + 25.f * boulders[j]->m_orientation;
+                                m.payload.direction = rotateVector90Left(boulders[j]->m_orientation);
+                                MessageQueue::getInstance()->pushMessage(m);
+
+                                m.payload.position = boulders[j]->m_position - 25.f * boulders[j]->m_orientation;
+                                m.payload.direction = rotateVector90Right(boulders[j]->m_orientation);
+                                MessageQueue::getInstance()->pushMessage(m);
+                            }
+
+                            if (boulders[j]->m_type == GlobalConfig::OBJECTS::ROCK)
+                            {
+                                m.type = MessageQueue::MessageType::MAKE_RUBBLE;
+                                m.payload.position = boulders[j]->m_position;
+                                m.payload.direction = boulders[j]->m_orientation;
+                                MessageQueue::getInstance()->pushMessage(m);
+                            }
+
+                            bullets[i]->m_markedForDeath = true;
+                            boulders[j]->m_markedForDeath = true;
+                        }
+                    }
+                }
+            }
+
+            //std::cout << "Collisions: " << collisions.size() << "\n";
+            for (int i = 0; i < collisions.size(); i++)
+            {
+                collisions[i]->m_colliderComponent.m_color = sf::Color::Red;
+            }
+            collisions.clear();
+
+            // process messages
+            bool empty{ false };
+            while (!empty)
+            {
+                MessageQueue::Message currentMessage = MessageQueue::getInstance()->getMessage();
+                switch (currentMessage.type)
+                {
                 case MessageQueue::MessageType::EMPTY:
                 {
                     empty = true;
@@ -301,7 +383,7 @@ void Game::run()
                 {
                     for (int i = 0; i < 10; i++)
                     {
-						particles.addParticle(particleSpawner.createParticle(GlobalConfig::PARTICLES::EXPLOSION_PIXEL, currentMessage.payload.position, currentMessage.payload.direction));
+                        particles.addParticle(particleSpawner.createParticle(GlobalConfig::PARTICLES::EXPLOSION_PIXEL, currentMessage.payload.position, currentMessage.payload.direction));
                     }
                     break;
                 }
@@ -313,28 +395,34 @@ void Game::run()
                     }
                     break;
                 }
+                }
             }
-        }
 
-        // miscellaneous
-        lastMousePosition = mousePosition;
+            // miscellaneous
+            lastMousePosition = mousePosition;
 
-        // cleanup
-        for (int i = 0; i < boulders.size(); i++)
-        {
-            if (boulders[i]->m_markedForDeath)
+            // cleanup
+            for (int i = 0; i < boulders.size(); i++)
             {
-                boulders.erase(boulders.begin() + i);
-                i--;
+                if (boulders[i]->m_markedForDeath)
+                {
+                    boulders.erase(boulders.begin() + i);
+                    i--;
+                }
             }
-        }
 
-        for (int i = 0; i < bullets.size(); i++)
-        {
-            if (bullets[i]->m_markedForDeath)
+            for (int i = 0; i < bullets.size(); i++)
             {
-                bullets.erase(bullets.begin() + i);
-                i--;
+                if (bullets[i]->m_markedForDeath)
+                {
+                    bullets.erase(bullets.begin() + i);
+                    i--;
+                }
+            }
+
+            if (boulders.size() <= 0)
+            {
+                isGameCompleted = true;
             }
         }
 
@@ -360,5 +448,13 @@ void Game::reset()
 
 Game::~Game()
 {
+    if (isGameCompleted && timePassed < previousScore)
+    {
+		std::fstream scoreFile;
+		scoreFile.open("score.txt", std::fstream::out);
+		scoreFile << std::to_string(timePassed);
+		scoreFile.close();
+    }
+
     delete window;
 }

@@ -6,6 +6,8 @@
 
 const float PI = 3.14159f;
 
+float distanceBetweenPoints(sf::Vector2f p1, sf::Vector2f p2);
+
 sf::VertexArray pointsToVertices(std::vector<sf::Vector2f> points, sf::Color color = sf::Color::Green);
 
 void printVA(sf::VertexArray va);

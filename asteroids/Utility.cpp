@@ -1,5 +1,10 @@
 #include "Utility.h"
 
+float distanceBetweenPoints(sf::Vector2f p1, sf::Vector2f p2)
+{
+    return std::sqrt((p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y));
+}
+
 sf::VertexArray pointsToVertices(std::vector<sf::Vector2f> points, sf::Color color)
 {
     sf::VertexArray dots;

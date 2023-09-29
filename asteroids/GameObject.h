@@ -15,6 +15,7 @@ public:
 	sf::Vector2f m_acceleration;
 	sf::Vector2f m_orientation;
 	GlobalConfig::OBJECTS m_type;
+	float m_radius;
 
 	float m_maxVelocity{ 200.f };
 	float m_maxAcceleration { 100.f };

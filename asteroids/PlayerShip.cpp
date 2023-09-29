@@ -13,6 +13,21 @@ PlayerShip::PlayerShip()
 	triangle.push_back({ m_position.x + 15.f, m_position.y + 15.f });
 	m_graphicsComponent.m_polygons.push_back(triangle);
 	m_colliderComponent.m_polygons.push_back(triangle);
+
+	float minx = triangle[0].x;
+	float maxx = triangle[0].x;
+	float miny = triangle[0].y;
+	float maxy = triangle[0].y;
+
+	for (int i = 1; i < triangle.size(); i++)
+	{
+		minx = std::min(minx, triangle[i].x);
+		maxx = std::max(maxx, triangle[i].x);
+		miny = std::min(miny, triangle[i].y);
+		maxy = std::max(maxy, triangle[i].y);
+	}
+
+	m_radius = distanceBetweenPoints({ minx, miny }, { maxx, maxy });
 }
 
 //

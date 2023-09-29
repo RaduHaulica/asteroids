@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 #include <time.h>
+#include <fstream>
+#include <iostream>
 
 #include "Config.h"
 #include "Utility.h"
@@ -25,7 +27,7 @@ public:
 
     std::shared_ptr<PlayerShip> ship;
     std::vector<std::unique_ptr<GameObject>> boulders;
-    std::vector<std::shared_ptr<GameObject>> bullets;
+    std::vector<std::unique_ptr<GameObject>> bullets;
 
     std::vector<sf::VertexArray> collisionHelpers;
 
@@ -36,12 +38,23 @@ public:
 
     GameParameters config;
     float dt{ 0.f };
+    float timePassed{ 0.f };
+    float previousScore{ 0.f };
+
+    sf::Font defaultFont;
+    sf::Text menuText;
+    sf::Text scoreText;
+    sf::Text highScoreText;
+    sf::Text gameOverText;
+
     sf::Clock clock;
     sf::Vector2f lastMousePosition;
     sf::Vector2f mousePosition;
 
     // misc game flags
     bool isQuitGameRequested;
+    bool isGameStarted;
+    bool isGameCompleted;
 
     // update related
     float fixedTimeUpdateInterval = 1.f / 60.f;

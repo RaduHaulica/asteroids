@@ -17,9 +17,12 @@ int main()
 {
     GameParameters gameConfiguration;
 
-    Game game(gameConfiguration);
-    game.initialize();
-    game.run();
+    while (!sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+    {
+		Game game(gameConfiguration);
+		game.initialize();
+		game.run();
+    }
 
     return 0;
 }
