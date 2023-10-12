@@ -28,6 +28,7 @@ PlayerShip::PlayerShip()
 	}
 
 	m_radius = distanceBetweenPoints({ minx, miny }, { maxx, maxy });
+	m_graphicsComponent.m_color = sf::Color::Cyan;
 }
 
 //
