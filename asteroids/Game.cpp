@@ -10,7 +10,7 @@ void Game::initialize()
     // initialize random seed
     std::srand(std::time(NULL));
 
-    defaultFont.loadFromFile("Roboto-Bold.ttf");
+    defaultFont.loadFromFile("./assets/Roboto-Bold.ttf");
 
     menuText.setFont(defaultFont);
     menuText.setFillColor(sf::Color::Yellow);
