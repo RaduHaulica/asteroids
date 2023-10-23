@@ -14,7 +14,7 @@ void Game::initialize()
 
     menuText.setFont(defaultFont);
     menuText.setFillColor(sf::Color::Yellow);
-    menuText.setString("ASTEROIDS!\n\nPRESS ENTER TO START\n\n\nArrow keys - steer ship\nSpace - shoot lasers\nPress ESC to restart\nHold ESC to quit");
+    menuText.setString("ASTEROIDS!\n\nPRESS ENTER TO START\n\n\nArrow keys - steer ship\nSpace - shoot lasers\nPress ESC to restart\nHold ESC to quit\n\nPress F1 for debug mode\n(shows colliders)");
     menuText.setPosition(300.f, 500.f);
 
     scoreText.setFont(defaultFont);
