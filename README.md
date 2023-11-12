@@ -1,8 +1,8 @@
 # Asteroids
 
-![Asteroids! Pew pew!](https://github.com/RaduHaulica/asteroids/blob/20a36842d815196270465a7a787661e595ff7f6b/asteroids/assets/asteroids%20main.gif)
+Classic game - fight inertia and shoot all the space boulders to win.
 
-Classic game, fight inertia and shoot all the space boulders to win.
+![Asteroids! Pew pew!](https://github.com/RaduHaulica/asteroids/blob/20a36842d815196270465a7a787661e595ff7f6b/asteroids/assets/asteroids%20main.gif)
 
 Boulders are almost randomly generated (factory), when you shoot one it breaks into two smaller ones with some special effects (particle systems). Game events (shooting, making rocks, explosions) are handled through a message queue.
 
